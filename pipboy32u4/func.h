@@ -2,7 +2,7 @@
 
 #include "arrays.h"
 
-void animate(){
+void animate() {
   if (pipboy.everyXFrames(9)) {
     if (currentframe < framecount) {
       ++currentframe;
@@ -13,73 +13,322 @@ void animate(){
     }
   }
 }
-void startup(){
+void startup() {
   //start animation, vault boy probably.
-  Sprites::drawOverwrite(WIDTH/2-vaultboyWidth/2,0, vaultboy, currentframe);
+  Sprites::drawOverwrite(WIDTH / 2 - vaultboyWidth / 2, 0, vaultboy, currentframe);
   animate();
-  if (startcounter == framecount*4){
+  if (startcounter == framecount * 4) {
     gamestate = 1;
   }
 }
 
-void handleMainMenu(){
-  if (mainMenu == INV){//highlight INV
-    pipboy.drawLine(0,51, 35, 51);
+void handleMainMenu() {
+  if (mainMenu == INV) { //highlight INV
+    pipboy.drawLine(0, 51, 35, 51);
     pipboy.drawLine(35, 51, 35, 64);
   }
-  if (mainMenu == USB){//highlight UDB
+  if (mainMenu == USB) { //highlight UDB
     pipboy.drawLine(33, 51, 65, 51);
     pipboy.drawLine(33, 51, 33, 65);
-    pipboy.drawLine(65,51,65,64);
+    pipboy.drawLine(65, 51, 65, 64);
   }
-  if (mainMenu == MAP){//highlight MAP
+  if (mainMenu == MAP) { //highlight MAP
     pipboy.drawLine(63, 51, 63, 64);
-    pipboy.drawLine(63,51, 95, 51);
+    pipboy.drawLine(63, 51, 95, 51);
     pipboy.drawLine(95, 51, 95, 64);
   }
-  if (mainMenu == RAD){ //highlight RAD
+  if (mainMenu == RAD) { //highlight RAD
     pipboy.drawLine(93, 51, 93, 64);
     pipboy.drawLine(93, 51, 128, 51);
   }
-  if (pipboy.justPressed(RIGHT_BUTTON) && mainMenu < 3){
+  if (pipboy.justPressed(RIGHT_BUTTON) && mainMenu < 3) {
     ++mainMenu;
   }
-  if (pipboy.justPressed(LEFT_BUTTON) && mainMenu > 0){
+  if (pipboy.justPressed(LEFT_BUTTON) && mainMenu > 0) {
     --mainMenu;
   }
 }
+void gamecontroller() {
+  // Initialize Joystick Library
+  Joystick.begin();
+  Joystick.setXAxis(m);
+  Joystick.setYAxis(m);
+  bool dirty = true;
+  int prevx = 0, prevy = 0;
+  bool button0, button1, button2, button3, button4, button5;
+  int x = 0, y = 0;
 
-void UI(){
- //actual "game"
- //menus include: Inventory (INV), MAP, USB interfaces (USB), and "Radio" (RAD)  
- //draw menu 
- pipboy.setCursor(0,56);
- pipboy.print(F("  INV  USB  MAP  RAD"));
- pipboy.drawLine(0, 52, 128, 52);//bottom H-line
- pipboy.drawLine(34, 52, 34, 64);//INV | USB
- pipboy.drawLine(64, 52, 64, 64);// USB | MAP
- pipboy.drawLine(94, 52, 94, 64);// MAP | RAD
- 
- 
- //update menu
- handleMainMenu();
- //update specific menu parts if they are selected 
- //change selection based on current screen and selection counter. 
- //change current screen
- 
+  if (holdSpecialButton < millis())
+  {
+    if (startButton || selectButton)
+    {
+      Joystick.setButton(2, false);
+      Joystick.setButton(3, false);
+      selectButton = false;
+      startButton = false;
+    }
+
+    if (button2 != pipboy.pressed(UP_BUTTON)){
+      y -= m;
+      button2 = !button2;
+      Joystick.setButton(4, button2);
+      
+    }
+
+    if (button3 != pipboy.pressed(DOWN_BUTTON)){
+      y += m;
+      button3 = !button3;
+      Joystick.setButton(5, button3);
+    }
+
+    if (button4 != pipboy.pressed(LEFT_BUTTON)){
+      x -= m;
+      button4 = !button4;
+      Joystick.setButton(6, button4);
+  }
+
+    if (button5 != pipboy.pressed(RIGHT_BUTTON)){
+      x += m;
+      button5 = !button5;
+      Joystick.setButton(7, button5);
+  }
+
+    if (x != prevx)
+    {
+      Joystick.setXAxis(x);
+      prevx = x;
+    }
+    if (y != prevy)
+    {
+      Joystick.setYAxis(y);
+      prevy = y;
+    }
+
+    if (x == 0 && pipboy.pressed(LEFT_BUTTON) && pipboy.notPressed(A_BUTTON + B_BUTTON)) // Start button
+    {
+      if (startHeldDown == 0)
+        startHeldDown = millis();
+      else if (millis() - startHeldDown > buttonHeldTime)
+      {
+        holdSpecialButton = millis() + buttonReleaseTime;
+        Joystick.setButton(3, true);
+        startButton = true;
+      }
+    }
+    else
+      startHeldDown = 0;
+
+    if (y == 0 && pipboy.pressed(UP_BUTTON) && pipboy.notPressed(A_BUTTON + B_BUTTON)) // Select button
+    {
+      if (selectHeldDown == 0)
+        selectHeldDown = millis();
+      else if (millis() - selectHeldDown > buttonHeldTime)
+      {
+        holdSpecialButton = millis() + buttonReleaseTime;
+        Joystick.setButton(2, true);
+        selectButton = true;
+      }
+    }
+    else
+      selectHeldDown = 0;
+
+    if (button0 != pipboy.pressed(A_BUTTON))
+    {
+      button0 = !button0;
+      Joystick.setButton(0, button0);
+    }
+
+    if (button1 != pipboy.pressed(B_BUTTON))
+    {
+      button1 = !button1;
+      Joystick.setButton(1, button1);
+    }
+    if (selectButton == true && startButton == true){
+      gamestate=1;
+    }
+  }
+
+  dirty = !pipboy.nextFrame();
+
+  if (dirty)
+  {
+    pipboy.clear();
+
+    // Draw joystick
+    switch (x)
+    {
+      case 0: pipboy.drawTriangle(18, 13, 30, 25, 18, 37, WHITE); pipboy.drawRect(7, 13, 12, 25);
+        pipboy.drawTriangle(46, 13, 46, 37, 34, 25, WHITE); pipboy.drawRect(46, 13, 12, 25);
+        pipboy.drawLine(18, 14, 18, 36, BLACK); pipboy.drawLine(46, 14, 46, 36, BLACK);
+        break;
+      case -m: pipboy.fillTriangle(18, 13, 30, 25, 18, 37, WHITE); pipboy.fillRect(7, 13, 12, 25);
+        pipboy.drawTriangle(46, 13, 46, 37, 34, 25, WHITE); pipboy.drawRect(46, 13, 12, 25);
+        /*pipboy.drawLine(18, 14, 18, 36, BLACK);*/ pipboy.drawLine(46, 14, 46, 36, BLACK);
+        break;
+      case m: pipboy.drawTriangle(18, 13, 30, 25, 18, 37, WHITE); pipboy.drawRect(7, 13, 12, 25);
+        pipboy.fillTriangle(46, 13, 46, 37, 34, 25, WHITE); pipboy.fillRect(46, 13, 12, 25);
+        pipboy.drawLine(18, 14, 18, 36, BLACK); /*pipboy.drawLine(46, 14, 46, 36, BLACK);*/
+        break;
+    }
+
+    switch (y)
+    {
+      case 0: pipboy.drawTriangle(32, 23, 44, 11, 20, 11, WHITE); pipboy.drawRect(20, 0, 25, 12);
+        pipboy.drawTriangle(32, 27, 44, 39, 20, 39, WHITE); pipboy.drawRect(20, 39, 25, 12);
+        pipboy.drawLine(43, 11, 21, 11, BLACK); pipboy.drawLine(21, 39, 43, 39, BLACK);
+        break;
+      case -m: pipboy.fillTriangle(32, 23, 44, 11, 20, 11, WHITE); pipboy.fillRect(20, 0, 25, 12);
+        pipboy.drawTriangle(32, 27, 44, 39, 20, 39, WHITE); pipboy.drawRect(20, 39, 25, 12);
+        /*pipboy.drawLine(43, 11, 21, 11, BLACK);*/ pipboy.drawLine(21, 39, 43, 39, BLACK);
+        break;
+      case m: pipboy.drawTriangle(32, 23, 44, 11, 20, 11, WHITE); pipboy.drawRect(20, 0, 25, 12);
+        pipboy.fillTriangle(32, 27, 44, 39, 20, 39, WHITE); pipboy.fillRect(20, 39, 25, 12);
+        pipboy.drawLine(43, 11, 21, 11, BLACK); /*pipboy.drawLine(21, 39, 43, 39, BLACK);*/
+        break;
+    }
+
+    if (pipboy.pressed(A_BUTTON))
+      pipboy.fillCircle(88, 30, 12);
+    else
+      pipboy.drawCircle(88, 30, 12);
+
+    if (pipboy.pressed(B_BUTTON))
+      pipboy.fillCircle(115, 24, 12);
+    else
+      pipboy.drawCircle(115, 24, 12);
+
+    if (selectButton)
+      pipboy.fillRoundRect(40, 56, 20, 8, 1);
+    else
+      pipboy.drawRoundRect(40, 56, 20, 8, 1);
+
+    if (startButton)
+      pipboy.fillRoundRect(68, 56, 20, 8, 1);
+    else
+      pipboy.drawRoundRect(68, 56, 20, 8, 1);
+
+    // Rounding
+    pipboy.drawPixel(20, 0, BLACK);
+    pipboy.drawPixel(44, 0, BLACK);
+    pipboy.drawPixel(20, 50, BLACK);
+    pipboy.drawPixel(44, 50, BLACK);
+    pipboy.drawPixel(7, 13, BLACK);
+    pipboy.drawPixel(7, 37, BLACK);
+    pipboy.drawPixel(57, 13, BLACK);
+    pipboy.drawPixel(57, 37, BLACK);
+
+    pipboy.display();
+    dirty = false;
+}
+}
+void USBattack() {
+  delay(5000);
+  CommandAtRunBarMSWIN("powershell");
+  delay(4000);
+  Keyboard.println("Add-Type -AssemblyName System.speech");
+  delay(2000);
+  Keyboard.println("$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer");
+  delay(2000);
+  Keyboard.println("$speak.Speak(\"Where is my body? Oh. Oh, god no. Where are my eyes? Greyson, where are my eyes?\")");
+  delay(2000);
+  Keyboard.println("exit");
+}
+void subMenus() {
+  if (mainMenu == INV) {
+    tinyfont.setCursor(6, 0);
+    tinyfont.print(F("\n \n Lock \n \n Key \n \n EMG Cache"));
+    pipboy.drawLine(62, 0, 62, 52);
+    INVcursorx = 0;
+    tinyfont.setCursor(64, 5);
+    switch (INVselect) {
+      case 0: //Lock
+        INVcursory = 10;
+        tinyfont.print(F("(25N, 75W)\n Be sure to \n lock up when \n you're done!"));
+        break;
+
+      case 1: //Key
+        INVcursory = 20;
+        tinyfont.print(F("Under\nfloorboards:\n\n\n(37.2431N,\n115.7930W)"));
+        break;
+
+      case 2://Emergency Cache
+        INVcursory = 30;
+        tinyfont.print(F("(38.8860N\n77.0214W)"));
+        break;
+    }
+    if (pipboy.justPressed(DOWN_BUTTON) && INVselect < 2) INVselect += 1;
+    if (pipboy.justPressed(UP_BUTTON) && INVselect > 0) INVselect -= 1;
+
+    pipboy.fillRect(INVcursorx, INVcursory, 4, 4);
+  }
+  if (mainMenu == MAP) {
+    pipboy.drawBitmap(0, 0, hmap, 128, 52);
+  }
+  if (mainMenu == USB) {
+      pipboy.setCursor(0, 15);
+      pipboy.print(F("   BadUSB Attack \n   Game Controller \n   Serial Terminal"));
+      switch (USBselect) {
+
+        case 0:
+          pipboy.setCursor(5, 15);
+          break;
+
+        case 1:
+          pipboy.setCursor(5, 23);
+          break;
+
+        case 2:
+          pipboy.setCursor(5, 31);
+          break;
+      }
+      pipboy.print(F(">"));
+    if (pipboy.justPressed(DOWN_BUTTON) && USBselect < 2) USBselect += 1;
+    if (pipboy.justPressed(UP_BUTTON) && USBselect > 0) USBselect -= 1;
+    if (pipboy.justPressed(A_BUTTON) && USBselect == 0) {
+      USBattack();
+    }
+    if (pipboy.justPressed(A_BUTTON) && USBselect == 1) {  //hold all four directions to exit
+      gamestate = 2;
+    }
+  }
+
 }
 
-void gameloop(){
-  switch (gamestate){
+void UI() {
+  //actual "game"
+  //menus include: Inventory (INV), MAP, USB interfaces (USB), and "Radio" (RAD)
+  //draw menu
+  subMenus();
+  pipboy.setCursor(0, 56);
+  pipboy.print(F("  INV  USB  MAP  RAD"));
+  pipboy.drawLine(0, 52, 128, 52);//bottom H-line
+  pipboy.drawLine(34, 52, 34, 64);//INV | USB
+  pipboy.drawLine(64, 52, 64, 64);// USB | MAP
+  pipboy.drawLine(94, 52, 94, 64);// MAP | RAD
+
+
+  //update menu
+  handleMainMenu();
+  //update specific menu parts if they are selected
+  //change selection based on current screen and selection counter.
+  //change current screen
+
+}
+
+void gameloop() {
+  switch (gamestate) {
 
     case 0:
-    startup();
-    break;
+      startup();
+      break;
 
     case 1:
-    //user interface
-    UI();
+      //user interface
+      UI();
+      break;
+
+    case 2:
+    gamecontroller();
     break;
-    
   }
 }
