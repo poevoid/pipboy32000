@@ -3,12 +3,10 @@
 #include <Arduboy2.h>
 #include <Tinyfont.h>
 #include <Joystick.h>
+#include <ArduboyTones.h>
 Arduboy2 pipboy;
-
-#define JOYSTICK_REPORT_ID 0x03
+ArduboyTones radio(pipboy.audio.enabled);
 Tinyfont tinyfont= Tinyfont(pipboy.sBuffer, Arduboy2::width(), Arduboy2::height());
-// Create the Joystick with 4 buttons
-
 
 #include "func.h"
 
@@ -18,6 +16,7 @@ void setup() {
   pipboy.clear();
   pipboy.setFrameRate(60); //no need to waste power, right?
   Keyboard.begin();
+  Serial.begin(9600);
 }
 
 void loop() {
