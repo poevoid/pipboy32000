@@ -17,6 +17,8 @@ uint8_t RADselect = 0;
 uint8_t INVcursorx;
 uint8_t INVcursory;
 
+uint8_t currentawaveframe = 0;
+uint8_t currentbwaveframe = 13;
 /*///////////////////////////////JOYSTICK////////////////////////////////////////////////////*/
 unsigned long holdSpecialButton = 0, startHeldDown = 0, selectHeldDown = 0;
 bool startButton = false, selectButton = false;
