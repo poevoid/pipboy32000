@@ -3,8 +3,25 @@
 #include "arrays.h"
 
 void plotData() {
-  
+  Sprites::drawSelfMasked(96, 18, sinewave, currentawaveframe);
+  Sprites::drawSelfMasked(109, 18, sinewave, currentbwaveframe);
+  if (pipboy.everyXFrames(9)) {
+    if (currentawaveframe < 23) {
+      ++currentawaveframe;
+    }
+    else {
+      currentawaveframe = firstframe;
+    }
+    if (currentbwaveframe < 23) {
+      ++currentbwaveframe;
+    }
+    else {
+      currentbwaveframe = firstframe;
+    }
+  }
 }
+
+
 
 void animate() {
   if (pipboy.everyXFrames(9)) {
@@ -21,7 +38,7 @@ void startup() {
   //start animation, vault boy probably.
   Sprites::drawOverwrite(WIDTH / 2 - vaultboyWidth / 2, 0, vaultboy, currentframe);
   animate();
-  pipboy.setCursor(0,28);
+  pipboy.setCursor(0, 28);
   pipboy.print(F("PIP-BOY"));
   pipboy.setCursor(85, 28);
   pipboy.print(F("32,000"));
@@ -76,30 +93,30 @@ void gamecontroller() {
       startButton = false;
     }
 
-    if (button2 != pipboy.pressed(UP_BUTTON)){
+    if (button2 != pipboy.pressed(UP_BUTTON)) {
       y -= m;
       button2 = !button2;
       Joystick.setButton(4, button2);
-      
+
     }
 
-    if (button3 != pipboy.pressed(DOWN_BUTTON)){
+    if (button3 != pipboy.pressed(DOWN_BUTTON)) {
       y += m;
       button3 = !button3;
       Joystick.setButton(5, button3);
     }
 
-    if (button4 != pipboy.pressed(LEFT_BUTTON)){
+    if (button4 != pipboy.pressed(LEFT_BUTTON)) {
       x -= m;
       button4 = !button4;
       Joystick.setButton(6, button4);
-  }
+    }
 
-    if (button5 != pipboy.pressed(RIGHT_BUTTON)){
+    if (button5 != pipboy.pressed(RIGHT_BUTTON)) {
       x += m;
       button5 = !button5;
       Joystick.setButton(7, button5);
-  }
+    }
 
     if (x != prevx)
     {
@@ -151,8 +168,9 @@ void gamecontroller() {
       button1 = !button1;
       Joystick.setButton(1, button1);
     }
-    if (selectButton == true && startButton == true){
-      gamestate=1;
+    if (selectButton == true && startButton == true) {
+      gamecontrolleropen = false;
+      gamestate = 1;
     }
   }
 
@@ -227,10 +245,10 @@ void gamecontroller() {
 
     pipboy.display();
     dirty = false;
-}
+  }
 }
 
-void USBattackL(){
+void USBattackL() {
   delay(5000);
   CommandAtRunBarGnome("gnome-terminal");
   delay(3000);
@@ -301,46 +319,47 @@ void subMenus() {
     pipboy.drawBitmap(0, 0, hmap, 128, 52);
   }
   if (mainMenu == USB) {
-      pipboy.setCursor(0, 15);
-      pipboy.print(F("   BadUSB Attack(W) \n   Game Controller \n   BadUSB Attack(L)"));
-      switch (USBselect) {
+    pipboy.setCursor(0, 15);
+    pipboy.print(F("   BadUSB Attack(W) \n   Game Controller \n   BadUSB Attack(L)"));
+    switch (USBselect) {
 
-        case 0:
-          pipboy.setCursor(5, 15);
-          break;
+      case 0:
+        pipboy.setCursor(5, 15);
+        break;
 
-        case 1:
-          pipboy.setCursor(5, 23);
-          break;
+      case 1:
+        pipboy.setCursor(5, 23);
+        break;
 
-        case 2:
-          pipboy.setCursor(5, 31);
-          break;
-      }
-      pipboy.print(F(">"));
+      case 2:
+        pipboy.setCursor(5, 31);
+        break;
+    }
+    pipboy.print(F(">"));
     if (pipboy.justPressed(DOWN_BUTTON) && USBselect < 2) USBselect += 1;
     if (pipboy.justPressed(UP_BUTTON) && USBselect > 0) USBselect -= 1;
     if (pipboy.justPressed(A_BUTTON) && USBselect == 0) {
       USBattackW();
     }
     if (pipboy.justPressed(A_BUTTON) && USBselect == 1) {  //hold all four directions to exit
+      gamecontrolleropen = true;
       gamestate = 2;
     }
     if (pipboy.justPressed(A_BUTTON) && USBselect == 2) {
       USBattackL();
     }
   }
-  if (mainMenu == RAD){
-    tinyfont.setCursor(6,0);
+  if (mainMenu == RAD) {
+    tinyfont.setCursor(6, 0);
     tinyfont.print(F(" Into Each Life \n \n Crawl Out Through \n The Fallout"));
-    switch (RADselect){
+    switch (RADselect) {
       case 0:
-      pipboy.setCursor(0,0);
-      break;
+        pipboy.setCursor(0, 0);
+        break;
 
       case 1:
-      pipboy.setCursor(0,10);
-      break;
+        pipboy.setCursor(0, 10);
+        break;
     }
     pipboy.print(F(">"));
     Sprites::drawSelfMasked(94, 10, radiograph, 0);
@@ -364,7 +383,7 @@ void UI() {
   pipboy.drawLine(34, 52, 34, 64);//INV | USB
   pipboy.drawLine(64, 52, 64, 64);// USB | MAP
   pipboy.drawLine(94, 52, 94, 64);// MAP | RAD
-  if (pipboy.pressed(B_BUTTON)){
+  if (pipboy.pressed(B_BUTTON)) {
     startcounter = 0;
     gamestate = 0;
   }
@@ -389,7 +408,13 @@ void gameloop() {
       break;
 
     case 2:
-    gamecontroller();
-    break;
+      gamecontroller();
+      break;
+  }
+  if (pipboy.pressed(B_BUTTON) && !gamecontrolleropen) {
+    pipboy.setRGBled(255, 255, 255);
+  }
+  else {
+    pipboy.setRGBled(0, 0, 0);
   }
 }
