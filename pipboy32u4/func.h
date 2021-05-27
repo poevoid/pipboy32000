@@ -5,19 +5,17 @@
 void plotData() {
   Sprites::drawSelfMasked(96, 18, sinewave, currentawaveframe);
   Sprites::drawSelfMasked(109, 18, sinewave, currentbwaveframe);
-  if (pipboy.everyXFrames(9)) {
-    if (currentawaveframe < 23) {
-      ++currentawaveframe;
-    }
-    else {
-      currentawaveframe = firstframe;
-    }
-    if (currentbwaveframe < 23) {
-      ++currentbwaveframe;
-    }
-    else {
-      currentbwaveframe = firstframe;
-    }
+  if (currentawaveframe < 23) {
+    ++currentawaveframe;
+  }
+  else {
+    currentawaveframe = firstframe;
+  }
+  if (currentbwaveframe < 23) {
+    ++currentbwaveframe;
+  }
+  else {
+    currentbwaveframe = firstframe;
   }
 }
 
@@ -42,6 +40,9 @@ void startup() {
   pipboy.print(F("PIP-BOY"));
   pipboy.setCursor(85, 28);
   pipboy.print(F("32,000"));
+  if (pipboy.justPressed(A_BUTTON)) {
+    pipboy.digitalWriteRGB(RGB_OFF, RGB_OFF, RGB_OFF);
+  }
   if (startcounter == framecount * 3) {
     gamestate = 1;
   }
@@ -287,6 +288,22 @@ void USBattackW() {
   delay(2000);
   Keyboard.println("exit");
 }
+void lockwindows() {
+  Keyboard.press(KEY_LEFT_GUI);
+  Keyboard.println("l");
+  Keyboard.releaseAll();
+}
+void displaywindows() {
+  Keyboard.press(KEY_LEFT_GUI);
+  Keyboard.println("d");
+  Keyboard.releaseAll();
+}
+void openterminal() {
+  Keyboard.press(KEY_LEFT_CTRL);
+  Keyboard.press(KEY_LEFT_ALT);
+  Keyboard.println("t");
+  Keyboard.releaseAll();
+}
 void subMenus() {
   if (mainMenu == INV) {
     tinyfont.setCursor(6, 0);
@@ -319,34 +336,56 @@ void subMenus() {
     pipboy.drawBitmap(0, 0, hmap, 128, 52);
   }
   if (mainMenu == USB) {
-    pipboy.setCursor(0, 15);
-    pipboy.print(F("   BadUSB Attack(W) \n   Game Controller \n   BadUSB Attack(L)"));
+    pipboy.setCursor(0, 0);
+    pipboy.print(F("   BadUSB Attack(W) \n   BadUSB Attack(L) \n   Game Controller \n   Lock Windows \n   Display Windows \n   Open Terminal(L)"));
     switch (USBselect) {
 
       case 0:
-        pipboy.setCursor(5, 15);
+        pipboy.setCursor(5, 0);
         break;
 
       case 1:
-        pipboy.setCursor(5, 23);
+        pipboy.setCursor(5, 8);
         break;
 
       case 2:
-        pipboy.setCursor(5, 31);
+        pipboy.setCursor(5, 16);
         break;
+
+      case 3:
+        pipboy.setCursor(5, 24);
+        break;
+
+      case 4:
+        pipboy.setCursor(5, 32);
+        break;
+
+      case 5:
+        pipboy.setCursor(5, 40);
+        break;
+
     }
     pipboy.print(F(">"));
-    if (pipboy.justPressed(DOWN_BUTTON) && USBselect < 2) USBselect += 1;
+    if (pipboy.justPressed(DOWN_BUTTON) && USBselect < 5) USBselect += 1;
     if (pipboy.justPressed(UP_BUTTON) && USBselect > 0) USBselect -= 1;
     if (pipboy.justPressed(A_BUTTON) && USBselect == 0) {
       USBattackW();
     }
-    if (pipboy.justPressed(A_BUTTON) && USBselect == 1) {  //hold all four directions to exit
+    if (pipboy.justPressed(A_BUTTON) && USBselect == 2) {  //hold all four directions to exit
       gamecontrolleropen = true;
       gamestate = 2;
     }
-    if (pipboy.justPressed(A_BUTTON) && USBselect == 2) {
+    if (pipboy.justPressed(A_BUTTON) && USBselect == 1) {
       USBattackL();
+    }
+    if (pipboy.justPressed(A_BUTTON) && USBselect == 3) {
+      lockwindows();
+    }
+    if (pipboy.justPressed(A_BUTTON) && USBselect == 4) {
+      displaywindows();
+    }
+    if (pipboy.justPressed(A_BUTTON) && USBselect == 5) {
+      openterminal();
     }
   }
   if (mainMenu == RAD) {
@@ -363,13 +402,48 @@ void subMenus() {
     }
     pipboy.print(F(">"));
     Sprites::drawSelfMasked(94, 10, radiograph, 0);
+    plotData();
     if (pipboy.justPressed(DOWN_BUTTON) && RADselect < 1) RADselect += 1;
     if (pipboy.justPressed(UP_BUTTON) && RADselect > 0) RADselect -= 1;
-    if (pipboy.justPressed(A_BUTTON) && RADselect == 0) radio.tones(intoeachlife);
+    if (pipboy.justPressed(A_BUTTON) && RADselect == 0) {
+      radio.tones(intoeachlife);
+    }
     if (pipboy.justPressed(A_BUTTON) && RADselect == 1) radio.tones(crawlout);
-    plotData();
-  }
 
+    while (radio.playing()) {
+      pipboy.clear();
+      pipboy.drawLine(93, 51, 93, 64);
+      pipboy.drawLine(93, 51, 128, 51);
+      pipboy.setCursor(0, 56);
+      pipboy.print(F("  INV  USB  MAP  RAD"));
+      pipboy.drawLine(0, 52, 128, 52);//bottom H-line
+      pipboy.drawLine(34, 52, 34, 64);//INV | USB
+      pipboy.drawLine(64, 52, 64, 64);// USB | MAP
+      pipboy.drawLine(94, 52, 94, 64);// MAP | RAD
+      tinyfont.setCursor(6, 0);
+      tinyfont.print(F(" Into Each Life \n \n Crawl Out Through \n The Fallout"));
+      switch (RADselect) {
+        case 0:
+          pipboy.setCursor(0, 0);
+          break;
+
+        case 1:
+          pipboy.setCursor(0, 10);
+          break;
+      }
+      pipboy.print(F(">"));
+      Sprites::drawSelfMasked(94, 10, radiograph, 0);
+      plotData();
+      if (pipboy.justPressed(DOWN_BUTTON) && RADselect < 1) RADselect += 1;
+      if (pipboy.justPressed(UP_BUTTON) && RADselect > 0) RADselect -= 1;
+
+      if (pipboy.pressed(RIGHT_BUTTON)) {
+        radio.noTone();
+      }
+      pipboy.display();
+    }
+
+  }
 }
 
 void UI() {
@@ -385,6 +459,7 @@ void UI() {
   pipboy.drawLine(94, 52, 94, 64);// MAP | RAD
   if (pipboy.pressed(B_BUTTON)) {
     startcounter = 0;
+    //pipboy.digitalWriteRGB(RGB_ON, RGB_ON, RGB_ON);
     gamestate = 0;
   }
   //update menu
@@ -396,6 +471,7 @@ void UI() {
 }
 
 void gameloop() {
+
   switch (gamestate) {
 
     case 0:
@@ -405,16 +481,17 @@ void gameloop() {
     case 1:
       //user interface
       UI();
+
       break;
 
     case 2:
       gamecontroller();
       break;
   }
-  if (pipboy.pressed(B_BUTTON) && !gamecontrolleropen) {
-    pipboy.setRGBled(255, 255, 255);
+
+  if (pipboy.justPressed(B_BUTTON)) {
+    pipboy.digitalWriteRGB(RGB_ON, RGB_ON, RGB_ON);
   }
-  else {
-    pipboy.setRGBled(0, 0, 0);
-  }
+
+
 }
