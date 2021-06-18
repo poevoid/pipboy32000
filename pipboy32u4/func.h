@@ -118,7 +118,12 @@ void gamecontroller() {
   Joystick.setYAxis(m);
   bool dirty = true;
   int prevx = 0, prevy = 0;
-  bool button0, button1, button2, button3, button4, button5;
+  bool button0 = false;
+  bool button1 = false;
+  bool button2 = false;
+  bool button3 = false;
+  bool button4 = false;
+  bool button5 = false;
   int x = 0, y = 0;
 
   if (holdSpecialButton < millis())
