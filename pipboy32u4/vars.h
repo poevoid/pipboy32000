@@ -3,8 +3,10 @@
 #define USB 1
 #define MAP 2
 #define RAD 3
-#define JOYSTICK_REPORT_ID 0x03
-
+bool gamecontrolleropen = false;
+bool clockwise = false;
+bool anticlockwise = false;
+long oldPosition = -999;
 uint8_t gamestate = 0;
 uint8_t currentframe = 0;
 uint8_t firstframe = 0;
@@ -16,9 +18,11 @@ uint8_t INVselect = 0;
 uint8_t RADselect = 0;
 uint8_t INVcursorx;
 uint8_t INVcursory;
-
 uint8_t currentawaveframe = 0;
 uint8_t currentbwaveframe = 13;
+int oldPos = -999;
+
+bool toggleflashlight = false;
 /*///////////////////////////////JOYSTICK////////////////////////////////////////////////////*/
 unsigned long holdSpecialButton = 0, startHeldDown = 0, selectHeldDown = 0;
 bool startButton = false, selectButton = false;
