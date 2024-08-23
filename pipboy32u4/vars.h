@@ -21,7 +21,12 @@ uint8_t INVcursory;
 uint8_t currentawaveframe = 0;
 uint8_t currentbwaveframe = 13;
 int oldPos = -999;
-
+int lastSample;
+struct Wave {
+  int x;
+  int y;
+};
+Wave wave = {64, 0};
 bool toggleflashlight = false;
 /*///////////////////////////////JOYSTICK////////////////////////////////////////////////////*/
 unsigned long holdSpecialButton = 0, startHeldDown = 0, selectHeldDown = 0;
@@ -55,4 +60,15 @@ void CommandAtRunBarGnome(char *SomeCommand){
   Keyboard.print(SomeCommand);
   Keyboard.press(KEY_RETURN);
   Keyboard.releaseAll();
+}
+
+
+
+
+uint16_t ENIPinRead(uint8_t npin)
+{
+  power_adc_enable();
+  uint16_t v = analogRead(npin);
+  power_adc_disable();
+  return v;
 }
