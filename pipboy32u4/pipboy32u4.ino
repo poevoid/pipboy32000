@@ -18,7 +18,7 @@ Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_GAMEPAD,
 Arduboy2 pipboy;
 ArduboyTones radio(pipboy.audio.enabled);
 Tinyfont tinyfont= Tinyfont(pipboy.sBuffer, Arduboy2::width(), Arduboy2::height());
-Encoder Enc(3, 0);
+Encoder Enc(1, 0);
 
 #include "func.h"
 
@@ -26,8 +26,9 @@ Encoder Enc(3, 0);
 void setup() {
   // put your setup code here, to run once:
   pipboy.begin();
-  pinMode(3, INPUT_PULLUP);
+  pinMode(1, INPUT_PULLUP);
   pinMode(0, INPUT_PULLUP);
+  pinMode(A5, INPUT);
   pipboy.audio.enabled();
   pipboy.clear();
   pipboy.setFrameRate(45); //no need to waste power, right?
