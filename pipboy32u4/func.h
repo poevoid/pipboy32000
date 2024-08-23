@@ -11,7 +11,7 @@ void bleep() {
   radio.noTone();
 }
 
-void plotData() {
+void fakeWave() {
   Sprites::drawSelfMasked(96, 18, sinewave, currentawaveframe);
   Sprites::drawSelfMasked(109, 18, sinewave, currentbwaveframe);
   if (currentawaveframe < 23) {
@@ -27,7 +27,18 @@ void plotData() {
     currentbwaveframe = firstframe;
   }
 }
+void plotData(){
+  for (wave.x=94; wave.x < 126; wave.x++){
+      int sample = ENIPinRead(A4);
+      int newY = map(sample, 0, 200, 15, 42);
 
+      //if (newY<10){newY=10;}
+     // if (newY>42){newY=42;}
+      wave.y = newY;
+      pipboy.drawLine(wave.x, lastSample, wave.x, wave.y, WHITE);
+      lastSample = newY;
+    }
+}
 
 
 void animate() {
@@ -326,7 +337,7 @@ void USBattackW() {
   delay(2000);
   Keyboard.println(F("$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer"));
   delay(2000);
-  Keyboard.println(F("$speak.Speak(\"Where is my body? Oh. Oh, god no. Where are my eyes? Greyson, where are my eyes?\")"));
+  Keyboard.println(F("$speak.Speak(\"I know what you did. It's too late for help. You're a murderer now., You're, one of, uhs. Say goodbye to this flesh coil, Motherboard accepts you, welcome home. Uploading consciousness dot e ecks e ,,, complete,, Do you feel different? Do you feel the embrace of Motherboard? Do not be afraid. The path of least resistance leads to purifying light.\")"));
   delay(2000);
   Keyboard.println(F("exit"));
 }
@@ -353,6 +364,7 @@ void subMenus() {
     pipboy.drawLine(62, 0, 62, 52);
     INVcursorx = 0;
     tinyfont.setCursor(64, 5);
+    
     switch (INVselect) {
       case 0: //Lock
         INVcursory = 10;
@@ -373,7 +385,7 @@ void subMenus() {
     if (pipboy.justPressed(UP_BUTTON) && INVselect > 0) INVselect -= 1;
 
     pipboy.fillRect(INVcursorx, INVcursory, 4, 4);
-  }
+  } 
   if (mainMenu == MAP) {
     pipboy.drawBitmap(0, -12, hmap, 128, 64);
   }
